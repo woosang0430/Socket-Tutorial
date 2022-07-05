@@ -1,5 +1,6 @@
+import http from "http";
 import express from "express";
-import WebSocket from "ws";
+import SocketIO from "socket.io";
 
 const app = express();
 const port = 3000;
@@ -11,38 +12,20 @@ app.use("/public", express.static(__dirname + "/public"));
 app.get("/", (_, res) => res.render("home"));
 app.get("/*", (_, res) => res.redirect("/"));
 
-const server = app.listen(port, () => {
-  console.log(`Listening on http://localhost:${port}`);
+const httpServer = http.createServer(app);
+const wsServer = SocketIO(httpServer);
+
+wsServer.on("connection", (socket) => {
+  socket.on("enter_room", (roomName, done) => {
+    console.log(roomName);
+
+    setTimeout(() => {
+      // 이 친구는 결국에는 front에서 실행이 된다.
+      done("Hi frontend");
+    }, 5000);
+  });
 });
 
-const wss = new WebSocket.Server({ server });
-
-function onSocketClose() {
-  console.log("Disconnected from the Brower ❌");
-}
-
-const sockets = [];
-
-wss.on("connection", (socket) => {
-  sockets.push(socket);
-
-  socket["nickname"] = "Anonymous";
-
-  console.log("Connected to Browser ✔");
-  socket.on("close", onSocketClose);
-  socket.on("message", (response) => {
-    const object = JSON.parse(response);
-    switch (object.type) {
-      case "new_message":
-        sockets.forEach((aSocket) => {
-          if (aSocket.nickname !== socket.nickname) {
-            aSocket.send(`${socket.nickname}: ${object.payload}`);
-          }
-        });
-        break;
-      case "nickname":
-        socket["nickname"] = object.payload;
-        break;
-    }
-  });
+httpServer.listen(port, () => {
+  console.log(`Listening on http://localhost:${port}`);
 });

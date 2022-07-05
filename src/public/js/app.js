@@ -1,43 +1,17 @@
-const messageList = document.querySelector("ul");
-const nickForm = document.querySelector("#nick");
-const messageForm = document.querySelector("#message");
-const socket = new WebSocket(`ws://${window.location.host}`);
+const socket = io();
 
-socket.addEventListener("open", () => {
-  console.log("Connected to Server ✔");
-});
+const welcome = document.querySelector("#welcome");
+const form = welcome.querySelector("form");
 
-socket.addEventListener("message", (message) => {
-  const li = document.createElement("li");
-  li.textContent = message.data;
-  messageList.append(li);
-});
-
-socket.addEventListener("close", () => {
-  console.log("Disconnected from Server ❌");
-});
-
-function makeStringRes(type, payload) {
-  return JSON.stringify({ type, payload });
-}
-
-function handleMessageSubmit(event) {
+function handleRoomSubmit(event) {
   event.preventDefault();
-  const input = messageForm.querySelector("input");
-  socket.send(makeStringRes("new_message", input.value));
-  const li = document.createElement("li");
-  li.textContent = `You : ${input.value}`;
-  messageList.append(li);
+
+  const input = form.querySelector("input");
+  // emit의 마지막 argument로 함수를 넣을 수 있다.
+  socket.emit("enter_room", { payload: input.value }, (msg) => {
+    console.log(`backend says : ${msg}`);
+  });
   input.value = "";
 }
 
-function handleNicknameSubmit(event) {
-  event.preventDefault();
-  const input = nickForm.querySelector("input");
-  socket.send(makeStringRes("nickname", input.value));
-  input.value = "";
-}
-
-messageForm.addEventListener("submit", handleMessageSubmit);
-
-nickForm.addEventListener("submit", handleNicknameSubmit);
+form.addEventListener("submit", handleRoomSubmit);
