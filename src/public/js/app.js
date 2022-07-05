@@ -21,24 +21,13 @@ function makeStringRes(type, payload) {
   return JSON.stringify({ type, payload });
 }
 
-function handleSubmit(event, formEl) {
-  event.preventDefault();
-  const input = formEl.querySelector("input");
-  const type = formEl === nickForm ? "nick" : "message";
-
-  const responseJson = {
-    type,
-    payload: input.value,
-  };
-
-  socket.send(JSON.stringify(responseJson));
-  input.value = "";
-}
-
 function handleMessageSubmit(event) {
   event.preventDefault();
   const input = messageForm.querySelector("input");
   socket.send(makeStringRes("new_message", input.value));
+  const li = document.createElement("li");
+  li.textContent = `You : ${input.value}`;
+  messageList.append(li);
   input.value = "";
 }
 

@@ -35,8 +35,9 @@ wss.on("connection", (socket) => {
     switch (object.type) {
       case "new_message":
         sockets.forEach((aSocket) => {
-          aSocket.send(`${socket.nickname}: ${object.payload}`);
-          console.log(aSocket.nickname);
+          if (aSocket.nickname !== socket.nickname) {
+            aSocket.send(`${socket.nickname}: ${object.payload}`);
+          }
         });
         break;
       case "nickname":
