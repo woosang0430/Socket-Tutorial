@@ -16,13 +16,21 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
-  socket.on("enter_room", (roomName, done) => {
-    console.log(roomName);
+  socket.onAny((event) => {
+    console.log(`Socket Event : ${event}`);
+  });
 
-    setTimeout(() => {
-      // 이 친구는 결국에는 front에서 실행이 된다.
-      done("Hi frontend");
-    }, 5000);
+  socket.on("enter_room", (roomName, done) => {
+    socket.join(roomName);
+    done();
+    socket.to(roomName).emit("welcome");
+  });
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((room) => socket.to(room).emit("bye"));
+  });
+  socket.on("new_message", (msg, room, done) => {
+    socket.to(room).emit("new_message", msg);
+    done();
   });
 });
 
